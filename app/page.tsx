@@ -1,15 +1,29 @@
-import Image from "next/image";
+import Link from 'next/link';
+import { getJson, Trip } from './lib/api';
+import NewTripForm from './new-trip-form';
 
-type Activity = { id: number; title: string; time: string; location: string; notes: string};
-
+// A Server Component: this fetch runs on the Next.js server, not in the
+// browser, so CORS doesn't apply to it.
 export default async function Home() {
-    const res = await fetch('http://localhost:3001/activities');
-    const activities: Activity[] = await res.json();
-    console.log(activities);
+  const trips = await getJson<Trip[]>('/trips');
 
-    return (
+  return (
+    <main style={{ padding: 24, fontFamily: 'sans-serif', maxWidth: 640 }}>
+      <h1>TravelLab</h1>
+      <h2>Your trips</h2>
+      {trips.length === 0 ? (
+        <p>No trips yet. Add one below.</p>
+      ) : (
         <ul>
-          {activities.map((a) => <li key={a.id}>{a.title}</li>)}
+          {trips.map((trip) => (
+            <li key={trip.id}>
+              <Link href={`/trips/${trip.id}`}>{trip.name}</Link>
+            </li>
+          ))}
         </ul>
-    );
+      )}
+      <h2>New trip</h2>
+      <NewTripForm />
+    </main>
+  );
 }
