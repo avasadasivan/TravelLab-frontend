@@ -1,6 +1,8 @@
-// Everything the app knows about the backend lives here, so there's one place
-// to change when the API moves off localhost.
-export const API_BASE = 'http://localhost:3001';
+// Everything the app knows about the backend lives here. In production,
+// NEXT_PUBLIC_API_BASE is the deployed backend's URL. NEXT_PUBLIC_ variables
+// are baked in when the app is built, so set it before building.
+export const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001';
 
 export type Trip = { id: number; name: string; version: number };
 

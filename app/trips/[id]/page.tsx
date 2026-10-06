@@ -4,6 +4,10 @@ import ActivityItem from './activity-item';
 import NewActivityForm from './new-activity-form';
 import { LiveSync } from './live-sync';
 
+// Fetch the trip on every request, never at build time: the data changes all the
+// time, and the backend may not even be reachable while the site is building.
+export const dynamic = 'force-dynamic';
+
 export default async function TripPage({
   params,
 }: {

@@ -2,6 +2,10 @@ import Link from 'next/link';
 import { getJson, Trip } from './lib/api';
 import NewTripForm from './new-trip-form';
 
+// Fetch trips on every request, never at build time: the data changes all the
+// time, and the backend may not even be reachable while the site is building.
+export const dynamic = 'force-dynamic';
+
 // A Server Component: this fetch runs on the Next.js server, not in the
 // browser, so CORS doesn't apply to it.
 export default async function Home() {
