@@ -54,15 +54,30 @@ export async function sendJson(
 // "2026-11-03T10:00" -> "Tue, Nov 3, 10:00"
 export function formatStartTime(startTime: string): string {
   const [date, time] = startTime.split('T');
+  return `${formatDay(date)}, ${time}`;
+}
+
+// "2026-11-03" -> "Tue, Nov 3"
+export function formatDay(date: string): string {
   const [year, month, day] = date.split('-').map(Number);
   // Built from the parts in local time, so the day never shifts across time
   // zones.
-  const label = new Date(year, month - 1, day).toLocaleDateString(undefined, {
+  return new Date(year, month - 1, day).toLocaleDateString(undefined, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
   });
-  return `${label}, ${time}`;
+}
+
+// Splits activities into days, keyed by "2026-11-03". The API already sorts
+// by startTime, so the days and each day's activities come out in order.
+export function groupByDay(activities: Activity[]): [string, Activity[]][] {
+  const days = new Map<string, Activity[]>();
+  for (const activity of activities) {
+    const day = activity.startTime.slice(0, 10);
+    days.set(day, [...(days.get(day) ?? []), activity]);
+  }
+  return [...days];
 }
 
 // The zone the person is sitting in. Good enough until there's a city picker.
