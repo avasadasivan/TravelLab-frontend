@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Activity, getJson, Trip } from '../../lib/api';
 import ActivityItem from './activity-item';
 import NewActivityForm from './new-activity-form';
+import { LiveSync } from './live-sync';
 
 export default async function TripPage({
   params,
@@ -21,6 +22,7 @@ export default async function TripPage({
         <Link href="/">← All trips</Link>
       </p>
       <h1>{trip.name}</h1>
+      <LiveSync tripId={trip.id} />
       <h2>Activities</h2>
       {activities.length === 0 ? (
         <p>Nothing planned yet.</p>
