@@ -2,9 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Activity, formatStartTime, sendJson } from '../../lib/api';
-
-const rowStyle = { border: '1px solid #ccc', padding: 12, marginBottom: 8 };
+import { Activity, sendJson } from '../../lib/api';
 
 export default function ActivityItem({ activity }: { activity: Activity }) {
   const router = useRouter();
@@ -49,25 +47,41 @@ export default function ActivityItem({ activity }: { activity: Activity }) {
 
   if (editing) {
     return (
-      <li style={rowStyle}>
-        <div style={{ display: 'grid', gap: 8 }}>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Notes (optional)"
-          />
+      <li className="card border-sky-300 p-4 ring-2 ring-sky-100">
+        <div className="grid gap-3">
           <div>
-            <button type="button" onClick={save} disabled={busy}>
+            <label className="label" htmlFor={`title-${activity.id}`}>
+              Title
+            </label>
+            <input
+              id={`title-${activity.id}`}
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="input"
+            />
+          </div>
+          <div>
+            <label className="label" htmlFor={`notes-${activity.id}`}>
+              Notes
+            </label>
+            <textarea
+              id={`notes-${activity.id}`}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Notes (optional)"
+              rows={2}
+              className="input"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button type="button" onClick={save} disabled={busy} className="btn-primary">
               {busy ? 'Saving...' : 'Save'}
             </button>
             <button
               type="button"
               disabled={busy}
+              className="btn-secondary"
               onClick={() => {
                 setTitle(activity.title);
                 setNotes(activity.notes ?? '');
@@ -78,27 +92,47 @@ export default function ActivityItem({ activity }: { activity: Activity }) {
             </button>
           </div>
         </div>
-        {error && <p style={{ color: 'crimson' }}>{error}</p>}
+        {error && <p className="error-text">{error}</p>}
       </li>
     );
   }
 
   return (
-    <li style={rowStyle}>
-      <strong>{activity.title}</strong>
-      <div>
-        {formatStartTime(activity.startTime)} · {activity.location}
+    <li className="card group flex gap-4 p-4 transition hover:border-slate-300">
+      {/* The day heading above already shows the date, so just the time. */}
+      <div className="w-14 shrink-0 pt-0.5 font-mono text-sm font-semibold text-sky-700">
+        {activity.startTime.slice(11, 16)}
       </div>
-      {activity.notes && <div>{activity.notes}</div>}
-      <div style={{ marginTop: 8 }}>
-        <button type="button" onClick={() => setEditing(true)} disabled={busy}>
-          Edit
-        </button>
-        <button type="button" onClick={remove} disabled={busy}>
-          Delete
-        </button>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-2">
+          <h4 className="font-semibold">{activity.title}</h4>
+          <div className="flex shrink-0 gap-1 opacity-100 sm:opacity-0 sm:transition sm:group-hover:opacity-100 sm:focus-within:opacity-100">
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              disabled={busy}
+              className="btn-ghost"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={remove}
+              disabled={busy}
+              className="btn-ghost hover:bg-rose-50 hover:text-rose-600"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+        <p className="mt-0.5 text-sm text-slate-500">📍 {activity.location}</p>
+        {activity.notes && (
+          <p className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+            {activity.notes}
+          </p>
+        )}
+        {error && <p className="error-text">{error}</p>}
       </div>
-      {error && <p style={{ color: 'crimson' }}>{error}</p>}
     </li>
   );
 }

@@ -19,21 +19,23 @@ export function ShareLink() {
   }
 
   return (
-    <div style={{ marginBottom: 16 }}>
-      <button type="button" onClick={copy}>
-        {status === 'copied' ? 'Copied!' : 'Copy link'}
-      </button>{' '}
-      <small>Anyone with the link can view and edit this trip.</small>
+    <div className="flex flex-col items-start gap-1 sm:items-end">
+      <button type="button" onClick={copy} className="btn-secondary">
+        {status === 'copied' ? '✓ Copied!' : '🔗 Copy link'}
+      </button>
+      <p className="text-xs text-slate-500">
+        Anyone with the link can view and edit this trip.
+      </p>
       {status === 'failed' && (
-        <p>
-          Copy this link:{' '}
+        <div className="w-full max-w-sm">
+          <label className="label">Copy this link:</label>
           <input
             readOnly
             value={window.location.href}
             onFocus={(e) => e.target.select()}
-            style={{ width: '100%' }}
+            className="input"
           />
-        </p>
+        </div>
       )}
     </div>
   );
