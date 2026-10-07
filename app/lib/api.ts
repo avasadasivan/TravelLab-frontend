@@ -30,6 +30,19 @@ export async function getJson<T>(path: string): Promise<T> {
 
 // Used by the forms, which run in the browser. This is the call CORS applies
 // to: the page is on port 3000 and the backend on 3001.
+// Thrown for any non-2xx answer. Keeps the status and the parsed body, so
+// callers can react to specific cases, like a 409 that carries the current
+// record.
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public body: unknown,
+  ) {
+    super(message);
+  }
+}
+
 export async function sendJson(
   method: 'POST' | 'PATCH' | 'DELETE',
   path: string,
@@ -47,7 +60,11 @@ export async function sendJson(
     const message = Array.isArray(problem?.message)
       ? problem.message.join(', ')
       : problem?.message;
-    throw new Error(message || `${method} ${path} failed with ${res.status}`);
+    throw new ApiError(
+      message || `${method} ${path} failed with ${res.status}`,
+      res.status,
+      problem,
+    );
   }
 }
 

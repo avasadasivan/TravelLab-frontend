@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Activity, sendJson } from '../../lib/api';
+import { Activity, ApiError, sendJson } from '../../lib/api';
 
 export default function ActivityItem({ activity }: { activity: Activity }) {
   const router = useRouter();
@@ -11,25 +11,50 @@ export default function ActivityItem({ activity }: { activity: Activity }) {
   const [notes, setNotes] = useState(activity.notes ?? '');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // The version this edit is based on, captured when editing starts. Not
+  // activity.version: live sync refreshes that prop while you type, which
+  // would quietly turn a stale edit into an overwrite.
+  const [baseVersion, setBaseVersion] = useState(activity.version);
+  // Someone else's newer version, when the server answered 409.
+  const [conflict, setConflict] = useState<Activity | null>(null);
 
-  async function save() {
+  function startEditing() {
+    setTitle(activity.title);
+    setNotes(activity.notes ?? '');
+    setBaseVersion(activity.version);
+    setConflict(null);
+    setError(null);
+    setEditing(true);
+  }
+
+  async function save(version = baseVersion) {
     setBusy(true);
     setError(null);
     try {
       await sendJson('PATCH', `/activities/${activity.id}`, {
         title,
         notes: notes === '' ? null : notes,
-        // The version this screen was built from. The server ignores it today
-        // and will use it to reject stale edits with a 409 later.
-        version: activity.version,
+        version,
       });
       setEditing(false);
+      setConflict(null);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something broke');
+      if (err instanceof ApiError && err.status === 409) {
+        // Someone saved first. Keep the user's edits on screen and show theirs.
+        setConflict((err.body as { current: Activity }).current);
+      } else {
+        setError(err instanceof Error ? err.message : 'Something broke');
+      }
     } finally {
       setBusy(false);
     }
+  }
+
+  function takeTheirs() {
+    setConflict(null);
+    setEditing(false);
+    router.refresh();
   }
 
   async function remove() {
@@ -75,7 +100,7 @@ export default function ActivityItem({ activity }: { activity: Activity }) {
             />
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={save} disabled={busy} className="btn-primary">
+            <button type="button" onClick={() => save()} disabled={busy} className="btn-primary">
               {busy ? 'Saving...' : 'Save'}
             </button>
             <button
@@ -92,6 +117,37 @@ export default function ActivityItem({ activity }: { activity: Activity }) {
             </button>
           </div>
         </div>
+        {conflict && (
+          <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm">
+            <p className="font-medium text-amber-900">
+              Someone else changed this activity while you were editing.
+            </p>
+            <p className="mt-2 text-amber-900">Their version:</p>
+            <p className="mt-1 rounded-md bg-white px-3 py-2 text-slate-700">
+              <span className="font-semibold">{conflict.title}</span>
+              {conflict.notes && <> · {conflict.notes}</>}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={busy}
+                className="btn-primary"
+                // Re-save my edits on top of their version, on purpose this time.
+                onClick={() => save(conflict.version)}
+              >
+                Keep my changes
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                className="btn-secondary"
+                onClick={takeTheirs}
+              >
+                Use their version
+              </button>
+            </div>
+          </div>
+        )}
         {error && <p className="error-text">{error}</p>}
       </li>
     );
@@ -109,7 +165,7 @@ export default function ActivityItem({ activity }: { activity: Activity }) {
           <div className="flex shrink-0 gap-1 opacity-100 sm:opacity-0 sm:transition sm:group-hover:opacity-100 sm:focus-within:opacity-100">
             <button
               type="button"
-              onClick={() => setEditing(true)}
+              onClick={startEditing}
               disabled={busy}
               className="btn-ghost"
             >
