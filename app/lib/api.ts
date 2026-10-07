@@ -51,12 +51,6 @@ export async function sendJson(
   }
 }
 
-// "2026-11-03T10:00" -> "Tue, Nov 3, 10:00"
-export function formatStartTime(startTime: string): string {
-  const [date, time] = startTime.split('T');
-  return `${formatDay(date)}, ${time}`;
-}
-
 // "2026-11-03" -> "Tue, Nov 3"
 export function formatDay(date: string): string {
   const [year, month, day] = date.split('-').map(Number);

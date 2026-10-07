@@ -29,17 +29,21 @@ export default function NewTripForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <input
-        type="text"
-        required
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Paris spring break"
-      />
-      <button type="submit" disabled={saving}>
-        {saving ? 'Adding...' : 'Add trip'}
-      </button>
-      {error && <p style={{ color: 'crimson' }}>{error}</p>}
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <input
+          type="text"
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Trip name, e.g. Paris spring break"
+          aria-label="Trip name"
+          className="input"
+        />
+        <button type="submit" disabled={saving} className="btn-primary shrink-0">
+          {saving ? 'Creating...' : 'Create trip'}
+        </button>
+      </div>
+      {error && <p className="error-text">{error}</p>}
     </form>
   );
 }
